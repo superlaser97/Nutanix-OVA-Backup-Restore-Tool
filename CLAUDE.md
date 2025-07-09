@@ -11,6 +11,8 @@ This is a Nutanix OVA (Open Virtual Appliance) backup and restore tool that prov
 ### Core Components
 
 - **vm_export_menu.sh** - Main interactive script that handles the complete workflow
+- **vm_restore_menu.sh** - Interactive script for bulk VM restoration from backup points
+- **vm_custom_restore.sh** - Interactive script for custom VM restoration with user-configurable settings (TESTING - user feedback pending)
 - **old/** directory - Contains legacy individual utility scripts (deprecated)
 
 ### Main Script Structure (vm_export_menu.sh)
@@ -62,11 +64,19 @@ export PASS="your-password"
 
 ## Common Commands
 
-### Running the Tool
+### Running the Tools
 ```bash
-# Make executable and run
+# Export VMs to OVA backups
 chmod +x vm_export_menu.sh
 ./vm_export_menu.sh
+
+# Restore VMs from backup points (bulk restore)
+chmod +x vm_restore_menu.sh
+./vm_restore_menu.sh
+
+# Custom VM restoration (individual restore with custom settings)
+chmod +x vm_custom_restore.sh
+./vm_custom_restore.sh
 ```
 
 ### Development/Testing
@@ -90,7 +100,12 @@ The tool uses Nutanix Prism Central v3 REST API:
 - **Task Status**: `GET /api/nutanix/v3/tasks/{task_uuid}`
 - **OVA Listing**: `POST /api/nutanix/v3/ovas/list`
 - **OVA Download**: `GET /api/nutanix/v3/ovas/{uuid}/file`
+- **OVA Upload**: `POST /api/nutanix/v3/ovas` + `PUT /api/nutanix/v3/ovas/{uuid}/chunks`
+- **OVA Validation**: `POST /api/nutanix/v3/ovas/{uuid}/chunks/concatenate`
+- **VM Creation**: `POST /api/nutanix/v3/vms`
+- **VM Spec Extraction**: `GET /api/nutanix/v3/ovas/{uuid}/vm_spec`
 - **OVA Deletion**: `DELETE /api/nutanix/v3/ovas/{uuid}`
+- **Resource Listing**: `POST /api/nutanix/v3/{subnets|projects|clusters}/list`
 
 ## Output Structure
 
@@ -120,3 +135,26 @@ Individual utility scripts for specific operations (deprecated in favor of integ
 - `upload_restore_vm.sh` - VM restoration
 
 These scripts are maintained for reference but the main workflow should use `vm_export_menu.sh`.
+
+## Recent Additions
+
+### vm_custom_restore.sh (TESTING)
+
+New script for individual VM restoration with custom configuration options:
+
+**Features:**
+- Select specific OVA from any backup point
+- Customize VM name (defaults to original from CSV)
+- Choose target subnet from available options
+- Choose target project from available options
+- Individual file upload and restoration workflow
+
+**Workflow:**
+1. Select backup point (vm-export-* folder)
+2. Select specific OVA file to restore
+3. Configure VM name (default from vm_export_tasks.csv)
+4. Select target subnet (or use original)
+5. Select target project (or use original)
+6. Upload OVA and restore VM with custom settings
+
+**Status:** User testing in progress - feedback pending
