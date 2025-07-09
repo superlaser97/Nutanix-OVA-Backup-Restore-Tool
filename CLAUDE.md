@@ -12,7 +12,7 @@ This is a Nutanix OVA (Open Virtual Appliance) backup and restore tool that prov
 
 - **vm_export_menu.sh** - Main interactive script that handles the complete workflow
 - **vm_restore_menu.sh** - Interactive script for bulk VM restoration from backup points
-- **vm_custom_restore.sh** - Interactive script for custom VM restoration with user-configurable settings (TESTING - user feedback pending)
+- **vm_custom_restore.sh** - Interactive script for custom VM restoration with advanced configuration options
 - **old/** directory - Contains legacy individual utility scripts (deprecated)
 
 ### Main Script Structure (vm_export_menu.sh)
@@ -136,25 +136,29 @@ Individual utility scripts for specific operations (deprecated in favor of integ
 
 These scripts are maintained for reference but the main workflow should use `vm_export_menu.sh`.
 
-## Recent Additions
+## Custom Restore Script Features
 
-### vm_custom_restore.sh (TESTING)
+### vm_custom_restore.sh
 
-New script for individual VM restoration with custom configuration options:
+Advanced script for individual VM restoration with comprehensive customization:
 
-**Features:**
-- Select specific OVA from any backup point
-- Customize VM name (defaults to original from CSV)
-- Choose target subnet from available options
-- Choose target project from available options
-- Individual file upload and restoration workflow
+**Key Features:**
+- **Two-stage selection**: First select VM across all backups, then choose specific restore point
+- **Multi-subnet support**: Select multiple subnets for VM network interfaces (creates multiple NICs)
+- **Custom VM naming**: Override original VM name with custom name (defaults to original from CSV)
+- **Cross-project restoration**: Move VMs between projects during restore
+- **Real-time progress monitoring**: Visual progress table with status updates during upload/restore
+- **Resource discovery**: Automatically detects and lists available subnets and projects
+- **Intelligent defaults**: Uses original VM name from backup metadata as default
+- **Clean OVA naming**: Uploads OVAs with UUID naming (no .ova extension)
+- **Debug mode**: Detailed error reporting for troubleshooting
 
-**Workflow:**
-1. Select backup point (vm-export-* folder)
-2. Select specific OVA file to restore
-3. Configure VM name (default from vm_export_tasks.csv)
-4. Select target subnet (or use original)
-5. Select target project (or use original)
-6. Upload OVA and restore VM with custom settings
-
-**Status:** User testing in progress - feedback pending
+**Enhanced Workflow:**
+1. **VM Discovery**: Browse unique VMs across all backup points with restore count indicators
+2. **Restore Point Selection**: Choose specific backup version with timestamp and size details
+3. **VM Name Configuration**: Set custom VM name (defaults to original from CSV)
+4. **Multi-Subnet Selection**: Choose multiple subnets with toggle interface (creates separate NICs)
+5. **Project Selection**: Select target project or use original from backup
+6. **Configuration Review**: Summary of all customizations before proceeding
+7. **Upload & Restore**: Individual file upload with real-time progress monitoring
+8. **Cleanup**: Optional OVA deletion from Prism Central after successful restore
