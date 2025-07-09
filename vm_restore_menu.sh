@@ -66,6 +66,31 @@ display_restore_points() {
         local timestamp=$(basename "$dir" | sed 's/vm-export-//')
         local vm_count=$(tail -n +2 "$dir/vm_export_tasks.csv" 2>/dev/null | wc -l)
         
+        # Calculate total size of all OVA files in this restore point
+        local total_size=0
+        if [[ -d "$dir" ]]; then
+            while IFS= read -r -d '' file; do
+                if [[ -f "$file" ]]; then
+                    local file_size=$(stat -c%s "$file" 2>/dev/null || echo "0")
+                    total_size=$((total_size + file_size))
+                fi
+            done < <(find "$dir" -name "*.ova" -print0 2>/dev/null)
+        fi
+        
+        # Convert bytes to human readable format
+        local size_display=""
+        if [[ $total_size -eq 0 ]]; then
+            size_display="0MB"
+        elif [[ $total_size -lt 1024 ]]; then
+            size_display="${total_size}B"
+        elif [[ $total_size -lt $((1024 * 1024)) ]]; then
+            size_display="$((total_size / 1024))KB"
+        elif [[ $total_size -lt $((1024 * 1024 * 1024)) ]]; then
+            size_display="$((total_size / 1024 / 1024))MB"
+        else
+            size_display="$((total_size / 1024 / 1024 / 1024))GB"
+        fi
+        
         # Convert timestamp to readable format
         # Input: 2025-07-09_03-11-33
         # Output: 9 Jul 2025, 3:11:33 AM
@@ -102,7 +127,7 @@ display_restore_points() {
             readable_timestamp="$timestamp"
         fi
         
-        printf "%2d) %s (%d VMs)\n" "$((i+1))" "$readable_timestamp" "$vm_count"
+        printf "%2d) %s (%d VMs, %s)\n" "$((i+1))" "$readable_timestamp" "$vm_count" "$size_display"
     done
     
     echo ""

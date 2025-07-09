@@ -7,13 +7,13 @@ A comprehensive suite of interactive scripts for backing up and restoring VMs fr
 This toolkit provides two main scripts:
 
 ### 🔄 **vm_export_menu.sh** - VM Export & Backup
-- Browse and select VMs from Nutanix Prism Central
+- Browse and select VMs from Nutanix Prism Central with power state indicators
 - Export selected VMs to OVA format
 - Download the exported OVA files
 - Clean up OVA files from Prism Central after download
 
 ### 🔄 **vm_restore_menu.sh** - VM Restore & Recovery
-- Browse available backup restore points
+- Browse available backup restore points with size information
 - Select VMs to restore from backup
 - Upload OVA files back to Prism Central
 - Restore VMs with original names and configurations
@@ -59,7 +59,7 @@ This toolkit provides two main scripts:
 
 ### What This Script Does
 Think of this script as a **digital assistant** that helps you:
-1. **Browse** all your virtual machines (VMs) like browsing files in a folder
+1. **Browse** all your virtual machines (VMs) like browsing files in a folder, with power state indicators (🟢 ON, 🔴 OFF)
 2. **Select** which VMs you want to backup
 3. **Export** them to a standard backup format (OVA files)
 4. **Download** the backup files to your local storage
@@ -80,15 +80,15 @@ Page 1 of 3 | Showing 1-15 of 42 VMs
 
 Project: DICE Internal
 ----------------------------------------
-  1) Blank VM                    
-  4) Common Services VM          
-  7) Management Services VM      
+  1) Blank VM                    🔴 OFF     
+  4) Common Services VM          🟢 ON      
+  7) Management Services VM      🟢 ON      
 
 Project: Tenant 1
 ----------------------------------------
-  12) display-app               [SELECTED]
-  13) display-db                
-  15) display-worker            
+  12) display-app               🟢 ON      [SELECTED]
+  13) display-db                🔴 OFF     
+  15) display-worker            🟢 ON      
 ```
 
 #### Step 2: Navigating and Selecting
@@ -142,8 +142,8 @@ The script follows a three-phase workflow:
 
 #### Data Structures
 ```bash
-# VM data format: "project|vm_name|vm_uuid"
-vm_data=("DICE Internal|Blank VM|d155d064-96b8-4033-8381-d3907da0cf81")
+# VM data format: "project|vm_name|vm_uuid|power_state"
+vm_data=("DICE Internal|Blank VM|d155d064-96b8-4033-8381-d3907da0cf81|OFF")
 
 # Selection tracking
 selected=([1]=1 [5]=1 [12]=1)  # Associative array of selected indices

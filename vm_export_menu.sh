@@ -32,7 +32,7 @@ vms_json=$(curl -s -k -u "$USER:$PASS" \
 declare -a vm_data=()
 while IFS= read -r line; do
   vm_data+=("$line")
-done < <(jq -r '.entities[] | select(.metadata.project_reference.name and .metadata.project_reference.name != "_internal") | "\(.metadata.project_reference.name)|\(.status.name)|\(.metadata.uuid)"' <<< "$vms_json" | sort)
+done < <(jq -r '.entities[] | select(.metadata.project_reference.name and .metadata.project_reference.name != "_internal") | "\(.metadata.project_reference.name)|\(.status.name)|\(.metadata.uuid)|\(.status.resources.power_state // "UNKNOWN")"' <<< "$vms_json" | sort)
 
 if [[ ${#vm_data[@]} -eq 0 ]]; then
   echo "No qualifying VMs found. Exiting."
@@ -64,7 +64,7 @@ display_menu() {
   local display_index=1
   
   for vm in "${vm_data[@]}"; do
-    IFS='|' read -r project name uuid <<< "$vm"
+    IFS='|' read -r project name uuid power_state <<< "$vm"
     
     # Only display items for current page
     if [[ $index -ge $(( start_idx + 1 )) && $index -le $(( end_idx + 1 )) ]]; then
@@ -82,11 +82,19 @@ display_menu() {
         status="[SELECTED]"
       fi
       
+      # Format power state for display
+      local power_display=""
+      case "$power_state" in
+        "ON") power_display="🟢 ON" ;;
+        "OFF") power_display="🔴 OFF" ;;
+        *) power_display="⚪ $power_state" ;;
+      esac
+      
       # Make sure we have a name to display
       if [[ -n "$name" ]]; then
-        printf "%3d) %-30s %s\n" "$index" "$name" "$status"
+        printf "%3d) %-30s %-10s %s\n" "$index" "$name" "$power_display" "$status"
       else
-        printf "%3d) %-30s %s\n" "$index" "[NO NAME]" "$status"
+        printf "%3d) %-30s %-10s %s\n" "$index" "[NO NAME]" "$power_display" "$status"
       fi
     fi
     ((index++))
@@ -143,7 +151,7 @@ show_selection_summary() {
   
   for idx in $(printf '%s\n' "${!selected[@]}" | sort -n); do
     vm="${vm_data[$((idx-1))]}"
-    IFS='|' read -r project name uuid <<< "$vm"
+    IFS='|' read -r project name uuid power_state <<< "$vm"
     
     if [[ "$project" != "$current_project" ]]; then
       if [[ -n "$current_project" ]]; then
@@ -154,7 +162,15 @@ show_selection_summary() {
       current_project="$project"
     fi
     
-    printf "  %3d) %s\n" "$idx" "$name"
+    # Format power state for display
+    local power_display=""
+    case "$power_state" in
+      "ON") power_display="🟢 ON" ;;
+      "OFF") power_display="🔴 OFF" ;;
+      *) power_display="⚪ $power_state" ;;
+    esac
+    
+    printf "  %3d) %-30s %s\n" "$idx" "$name" "$power_display"
   done
   
   echo ""
@@ -182,7 +198,7 @@ select_project_vms() {
   local unique_projects=()
   
   for vm_line in "${vm_data[@]}"; do
-    IFS='|' read -r proj name uuid <<< "$vm_line"
+    IFS='|' read -r proj name uuid power_state <<< "$vm_line"
     if [[ -n "$proj" && -z "${seen_projects[$proj]:-}" ]]; then
       seen_projects["$proj"]=1
       unique_projects+=("$proj")
@@ -203,7 +219,7 @@ select_project_vms() {
     local project="${unique_projects[i]}"
     local vm_count=0
     for vm_line in "${vm_data[@]}"; do
-      IFS='|' read -r vm_proj vm_name vm_uuid <<< "$vm_line"
+      IFS='|' read -r vm_proj vm_name vm_uuid vm_power_state <<< "$vm_line"
       if [[ "$vm_proj" == "$project" ]]; then
         vm_count=$((vm_count + 1))
       fi
@@ -220,7 +236,7 @@ select_project_vms() {
     
     for i in "${!vm_data[@]}"; do
       vm="${vm_data[i]}"
-      IFS='|' read -r project name uuid <<< "$vm"
+      IFS='|' read -r project name uuid power_state <<< "$vm"
       if [[ "$project" == "$selected_project" ]]; then
         selected[$((i+1))]=1
         count=$((count + 1))
@@ -425,7 +441,7 @@ declare -a selected_indices=($(printf '%s\n' "${!selected[@]}" | sort -n))
 
 for idx in "${selected_indices[@]}"; do
   vm="${vm_data[$((idx-1))]}"
-  IFS='|' read -r project name uuid <<< "$vm"
+  IFS='|' read -r project name uuid power_state <<< "$vm"
   
   echo -n "→ $name ($project)... "
   
