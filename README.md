@@ -1,14 +1,23 @@
-# VM Export Menu Script
+# Nutanix OVA Backup & Restore Tool
 
-A comprehensive interactive script for exporting and downloading VMs from Nutanix Prism Central with an intuitive menu-driven interface.
+A comprehensive suite of interactive scripts for backing up and restoring VMs from Nutanix Prism Central with intuitive menu-driven interfaces.
 
 ## 📋 Overview
 
-This script provides a user-friendly way to:
+This toolkit provides two main scripts:
+
+### 🔄 **vm_export_menu.sh** - VM Export & Backup
 - Browse and select VMs from Nutanix Prism Central
 - Export selected VMs to OVA format
 - Download the exported OVA files
 - Clean up OVA files from Prism Central after download
+
+### 🔄 **vm_restore_menu.sh** - VM Restore & Recovery
+- Browse available backup restore points
+- Select VMs to restore from backup
+- Upload OVA files back to Prism Central
+- Restore VMs with original names and configurations
+- Clean up uploaded OVA files after restoration
 
 ## 🚀 Quick Start
 
@@ -16,13 +25,14 @@ This script provides a user-friendly way to:
 - Linux environment with bash shell
 - `jq` - JSON processor (`apt install jq` or `yum install jq`)
 - `curl` - HTTP client (`apt install curl` or `yum install curl`)
+- `sha1sum` - Checksum utility (for restore operations)
 - Network access to Nutanix Prism Central
 - Valid Nutanix credentials
 
 ### Setup
 1. **Create credentials file**:
    ```bash
-   # Create .nutanix_creds file in the same directory as the script
+   # Create .nutanix_creds file in the same directory as the scripts
    cat > .nutanix_creds << 'EOF'
    export PRISM="your-prism-central-ip"
    export USER="your-username"
@@ -30,14 +40,19 @@ This script provides a user-friendly way to:
    EOF
    ```
 
-2. **Make script executable**:
+2. **Make scripts executable**:
    ```bash
    chmod +x vm_export_menu.sh
+   chmod +x vm_restore_menu.sh
    ```
 
-3. **Run the script**:
+3. **Run the scripts**:
    ```bash
+   # For VM export/backup
    ./vm_export_menu.sh
+   
+   # For VM restore/recovery
+   ./vm_restore_menu.sh
    ```
 
 ## 🎯 For Non-Technical Users
