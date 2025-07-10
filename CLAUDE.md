@@ -13,7 +13,7 @@ This is a Nutanix OVA (Open Virtual Appliance) backup and restore tool that prov
 - **vm_export_menu.sh** - Main interactive script that handles the complete workflow
 - **vm_restore_menu.sh** - Interactive script for bulk VM restoration from backup points
 - **vm_custom_restore.sh** - Interactive script for custom VM restoration with advanced configuration options
-- **old/** directory - Contains legacy individual utility scripts (deprecated)
+- **manage_restore_points.sh** - Interactive script for managing backup restore points (view, delete, statistics)
 
 ### Main Script Structure (vm_export_menu.sh)
 
@@ -32,7 +32,7 @@ The script follows a three-phase workflow:
 3. **Download & Cleanup Phase**
    - Downloads OVA files sequentially to avoid network overload
    - Optionally deletes temporary OVA files from Prism Central
-   - Organizes output in timestamped directories
+   - Organizes output in timestamped directories within the `restore-points` folder
 
 ### Key Data Structures
 
@@ -77,6 +77,10 @@ chmod +x vm_restore_menu.sh
 # Custom VM restoration (individual restore with custom settings)
 chmod +x vm_custom_restore.sh
 ./vm_custom_restore.sh
+
+# Manage restore points (view, delete, statistics)
+chmod +x manage_restore_points.sh
+./manage_restore_points.sh
 ```
 
 ### Development/Testing
@@ -110,10 +114,11 @@ The tool uses Nutanix Prism Central v3 REST API:
 ## Output Structure
 
 ```
-vm-export-YYYY-MM-DD_HH-MM-SS/
-├── vm_export_tasks.csv          # Export metadata and task tracking
-├── {vm_uuid}.ova               # Exported VM files
-└── {vm_uuid}.ova               # Additional exports...
+restore-points/
+└── vm-export-YYYY-MM-DD_HH-MM-SS/
+    ├── vm_export_tasks.csv          # Export metadata and task tracking
+    ├── {vm_uuid}.ova               # Exported VM files
+    └── {vm_uuid}.ova               # Additional exports...
 ```
 
 ## Security Notes
@@ -123,18 +128,40 @@ vm-export-YYYY-MM-DD_HH-MM-SS/
 - Script uses `set -eu` for strict error handling
 - Input validation prevents injection attacks
 
-## Legacy Scripts (old/ directory)
+## Backup Location
 
-Individual utility scripts for specific operations (deprecated in favor of integrated menu):
-- `export_ova.sh` - VM export functionality
-- `download_ova.sh` - OVA download functionality
-- `delete_ova_in_pc.sh` - OVA cleanup
-- `upload_ova.sh` - OVA upload operations
-- `list_resources.sh` - Resource listing
-- `get_folder_size.sh` - Storage analysis
-- `upload_restore_vm.sh` - VM restoration
+All backup files are stored in the `restore-points` folder within the project root directory. This includes:
+- VM export backups (created by `vm_export_menu.sh`)
+- All related CSV files and metadata
+- OVA files downloaded from Nutanix Prism Central
 
-These scripts are maintained for reference but the main workflow should use `vm_export_menu.sh`.
+The restore scripts (`vm_restore_menu.sh` and `vm_custom_restore.sh`) automatically search for backup folders in the `restore-points` directory.
+
+## Restore Point Management
+
+### manage_restore_points.sh
+
+Interactive script for managing backup restore points with the following features:
+
+**Key Features:**
+- **View all restore points**: Lists all available backup restore points with timestamps, VM counts, and sizes
+- **Individual restore point details**: Shows detailed information about each restore point including VM lists and file status
+- **Delete restore points**: Safely delete individual restore points with confirmation prompts
+- **Bulk deletion**: Select and delete multiple restore points at once
+- **Storage statistics**: View storage usage by project and overall disk usage statistics
+- **Color-coded output**: Enhanced visual interface with status indicators
+
+**Menu Structure:**
+1. **Main Menu**: Overview of all restore points with basic statistics
+2. **Detail View**: Individual restore point information with VM breakdown
+3. **Delete Operations**: Safe deletion with confirmation prompts
+4. **Storage Statistics**: Comprehensive storage usage analysis
+
+**Safety Features:**
+- Requires typing "DELETE" to confirm destructive operations
+- Shows detailed information before deletion
+- Provides summary of successful/failed operations
+- Cannot accidentally delete without explicit confirmation
 
 ## Custom Restore Script Features
 
@@ -162,3 +189,8 @@ Advanced script for individual VM restoration with comprehensive customization:
 6. **Configuration Review**: Summary of all customizations before proceeding
 7. **Upload & Restore**: Individual file upload with real-time progress monitoring
 8. **Cleanup**: Optional OVA deletion from Prism Central after successful restore
+
+## Memories
+
+### Project Updates
+- There is no more legacy scripts, the "old" folder was removed

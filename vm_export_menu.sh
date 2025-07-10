@@ -431,7 +431,7 @@ echo ""
 
 # Create tasks file
 TIMESTAMP="$(date '+%Y-%m-%d_%H-%M-%S')"
-DOWNLOAD_DIR="$SCRIPT_DIR/vm-export-$TIMESTAMP"
+DOWNLOAD_DIR="$SCRIPT_DIR/restore-points/vm-export-$TIMESTAMP"
 mkdir -p "$DOWNLOAD_DIR"
 TASKS_FILE="$DOWNLOAD_DIR/vm_export_tasks.csv"
 echo "VM_NAME,VM_UUID,PROJECT_NAME,TASK_UUID,OVA_NAME" > "$TASKS_FILE"

@@ -22,6 +22,7 @@ Interactive scripts for backing up and restoring VMs from Nutanix Prism Central.
 | **`vm_export_menu.sh`** | Export VMs to OVA backups | Regular backups, migration prep |
 | **`vm_restore_menu.sh`** | Bulk restore multiple VMs | Disaster recovery, environment restore |
 | **`vm_custom_restore.sh`** | Single VM restore with custom settings | Selective recovery, cross-project moves |
+| **`manage_restore_points.sh`** | Manage backup restore points | Cleanup, storage management, audit |
 
 ## Workflow
 
@@ -29,6 +30,7 @@ Interactive scripts for backing up and restoring VMs from Nutanix Prism Central.
 Export: VM Selection → Export → Download → Cleanup
 Bulk Restore: Backup Selection → VM Selection → Upload → Restore  
 Custom Restore: VM Selection → Restore Point → Configure → Upload → Restore
+Management: View Restore Points → Delete/Statistics → Cleanup
 ```
 
 ## Quick Start
@@ -51,9 +53,10 @@ EOF
 chmod +x *.sh
 
 # 3. Run desired script
-./vm_export_menu.sh      # Export VMs
-./vm_restore_menu.sh     # Bulk restore
-./vm_custom_restore.sh   # Custom restore
+./vm_export_menu.sh         # Export VMs
+./vm_restore_menu.sh        # Bulk restore
+./vm_custom_restore.sh      # Custom restore
+./manage_restore_points.sh  # Manage backups
 ```
 
 ## Usage Examples
@@ -82,13 +85,22 @@ chmod +x *.sh
 3. Upload → Restore with custom settings
 ```
 
+### Manage Restore Points
+```
+./manage_restore_points.sh
+1. View all restore points with details
+2. Delete individual or multiple restore points
+3. View storage statistics by project
+```
+
 ## Output Structure
 
 ```
-vm-export-YYYY-MM-DD_HH-MM-SS/
-├── vm_export_tasks.csv              # Export metadata  
-├── {vm_uuid}.ova                    # VM backup files
-└── restore_tasks_*.csv              # Restore logs
+restore-points/
+└── vm-export-YYYY-MM-DD_HH-MM-SS/
+    ├── vm_export_tasks.csv              # Export metadata  
+    ├── {vm_uuid}.ova                    # VM backup files
+    └── restore_tasks_*.csv              # Restore logs
 ```
 
 ## Navigation Commands
@@ -101,6 +113,7 @@ vm-export-YYYY-MM-DD_HH-MM-SS/
 | `proj` | Select by project |
 | `s` | Show selections |
 | `e/r` | Export/restore |
+| `d` | Delete (in management) |
 | `q` | Quit |
 
 ## Configuration

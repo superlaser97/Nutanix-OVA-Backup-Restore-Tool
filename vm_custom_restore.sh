@@ -42,7 +42,7 @@ find_restore_points() {
         if [[ -f "$dir/vm_export_tasks.csv" ]]; then
             restore_points+=("$dir")
         fi
-    done < <(find "$SCRIPT_DIR" -maxdepth 1 -type d -name "vm-export-*" -print0 2>/dev/null)
+    done < <(find "$SCRIPT_DIR/restore-points" -maxdepth 1 -type d -name "vm-export-*" -print0 2>/dev/null)
     
     if [[ ${#restore_points[@]} -eq 0 ]]; then
         echo "No restore points found. Please run vm_export_menu.sh first to create backups."
