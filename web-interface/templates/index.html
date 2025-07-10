@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutanix Backup & Restore</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔄 Nutanix Backup & Restore</h1>
+            <div class="status-bar">
+                <span id="connection-status" class="status-indicator">⚪ Connecting...</span>
+                <span id="server-status" class="status-indicator">📡 Checking server...</span>
+            </div>
+        </header>
+        
+        <nav class="tab-nav">
+            <button onclick="showTab('dashboard')" class="tab-button active" id="tab-dashboard">📊 Dashboard</button>
+            <button onclick="showTab('vms')" class="tab-button" id="tab-vms">🖥️ Virtual Machines</button>
+            <button onclick="showTab('restore-points')" class="tab-button" id="tab-restore-points">💾 Restore Points</button>
+        </nav>
+        
+        <main>
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <h2>Dashboard Overview</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🖥️</div>
+                        <div class="stat-info">
+                            <h3>Total VMs</h3>
+                            <span id="total-vms" class="stat-value">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">💾</div>
+                        <div class="stat-info">
+                            <h3>Restore Points</h3>
+                            <span id="restore-points-count" class="stat-value">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">💿</div>
+                        <div class="stat-info">
+                            <h3>Storage Used</h3>
+                            <span id="storage-used" class="stat-value">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-info">
+                            <h3>Last Backup</h3>
+                            <span id="last-backup" class="stat-value">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dashboard-sections">
+                    <div class="section">
+                        <h3>🏃 Quick Actions</h3>
+                        <div class="quick-actions">
+                            <button onclick="showTab('vms')" class="action-btn">
+                                <span class="btn-icon">📤</span>
+                                Export VMs
+                            </button>
+                            <button onclick="showTab('restore-points')" class="action-btn">
+                                <span class="btn-icon">📥</span>
+                                Restore VMs
+                            </button>
+                            <button onclick="refreshData()" class="action-btn">
+                                <span class="btn-icon">🔄</span>
+                                Refresh Data
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>ℹ️ System Information</h3>
+                        <div id="system-info" class="info-grid">
+                            <div class="info-item">
+                                <strong>Script Directory:</strong>
+                                <span id="script-dir">-</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Restore Points Directory:</strong>
+                                <span id="restore-dir">-</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Status:</strong>
+                                <span id="system-status">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- VMs Tab -->
+            <div id="vms" class="tab-content">
+                <h2>Virtual Machines</h2>
+                
+                <div class="controls">
+                    <div class="filters">
+                        <input type="text" id="vm-search" placeholder="🔍 Search VMs..." />
+                        <select id="project-filter">
+                            <option value="">All Projects</option>
+                        </select>
+                        <select id="state-filter">
+                            <option value="">All States</option>
+                            <option value="ON">🟢 Powered On</option>
+                            <option value="OFF">🔴 Powered Off</option>
+                            <option value="UNKNOWN">⚪ Unknown</option>
+                        </select>
+                        <button onclick="refreshVMs()" class="btn-secondary">🔄 Refresh</button>
+                    </div>
+                </div>
+                
+                <div class="vm-container">
+                    <div class="vm-header">
+                        <input type="checkbox" id="select-all-vms" onchange="toggleSelectAll()">
+                        <span class="col-name">VM Name</span>
+                        <span class="col-project">Project</span>
+                        <span class="col-state">State</span>
+                        <span class="col-specs">Specs</span>
+                        <span class="col-actions">Actions</span>
+                    </div>
+                    
+                    <div id="vm-list" class="vm-list">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <span>Loading VMs...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="selection-summary">
+                    <span id="selected-count">0 VMs selected</span>
+                    <button id="export-selected" class="btn-primary" onclick="exportSelected()" disabled>
+                        📤 Export Selected VMs
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Restore Points Tab -->
+            <div id="restore-points" class="tab-content">
+                <h2>Restore Points</h2>
+                
+                <div class="controls">
+                    <div class="filters">
+                        <input type="checkbox" id="select-all-restore-points" onchange="toggleSelectAllRestorePoints()">
+                        <label for="select-all-restore-points">Select All</label>
+                        <button onclick="refreshRestorePoints()" class="btn-secondary">🔄 Refresh</button>
+                        <button onclick="manageRestorePoints()" class="btn-secondary">⚙️ Manage</button>
+                        <button id="bulk-delete-btn" onclick="bulkDeleteRestorePoints()" class="btn-danger" disabled>
+                            🗑️ Delete Selected
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="restore-points-container">
+                    <div class="restore-points-header">
+                        <input type="checkbox" id="select-all-restore-points-header" onchange="toggleSelectAllRestorePoints()">
+                        <span class="col-name">Restore Point Name</span>
+                        <span class="col-date">Date Created</span>
+                        <span class="col-vms">VMs</span>
+                        <span class="col-size">Size</span>
+                        <span class="col-actions">Actions</span>
+                    </div>
+                    
+                    <div id="restore-points-list" class="restore-points-list">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <span>Loading restore points...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="restore-points-summary" class="selection-summary" style="display: none;">
+                    <span id="selected-restore-points-count">0 restore points selected</span>
+                    <span id="selected-restore-points-size">0 B total</span>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="overlay">
+            <div class="overlay-content">
+                <div class="spinner large"></div>
+                <h3>Processing...</h3>
+                <p id="loading-message">Please wait...</p>
+            </div>
+        </div>
+        
+        <!-- Error Modal -->
+        <div id="error-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>❌ Error</h3>
+                    <button onclick="closeModal('error-modal')" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="error-message"></p>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeModal('error-modal')" class="btn-secondary">Close</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Success Modal -->
+        <div id="success-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>✅ Success</h3>
+                    <button onclick="closeModal('success-modal')" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p id="success-message"></p>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeModal('success-modal')" class="btn-primary">OK</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VM Details Modal -->
+        <div id="vm-details-modal" class="modal">
+            <div class="modal-content vm-details-content">
+                <div class="modal-header">
+                    <h3>🖥️ VM Details</h3>
+                    <button onclick="closeModal('vm-details-modal')" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="vm-details-content"></div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeModal('vm-details-modal')" class="btn-secondary">Close</button>
+                    <button onclick="exportSingleVM()" class="btn-primary" id="export-single-vm-btn">📤 Export This VM</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-confirmation-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚠️ Confirm Deletion</h3>
+                    <button onclick="closeModal('delete-confirmation-modal')" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="delete-confirmation-content"></div>
+                    <div class="danger-warning">
+                        <p><strong>⚠️ Warning:</strong> This action cannot be undone. All VM backup files will be permanently deleted.</p>
+                        <p>Type <strong>DELETE</strong> to confirm:</p>
+                        <input type="text" id="delete-confirmation-input" placeholder="Type DELETE to confirm" style="width: 100%; margin-top: 0.5rem;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeModal('delete-confirmation-modal')" class="btn-secondary">Cancel</button>
+                    <button onclick="confirmDelete()" class="btn-danger" id="confirm-delete-btn" disabled>🗑️ Delete</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Restore Point Contents Modal -->
+        <div id="restore-point-contents-modal" class="modal">
+            <div class="modal-content restore-point-contents">
+                <div class="modal-header">
+                    <h3>📦 Restore Point Contents</h3>
+                    <button onclick="closeModal('restore-point-contents-modal')" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="restore-point-info"></div>
+                    
+                    <div class="restore-point-vm-container">
+                        <div class="restore-point-vm-header">
+                            <span class="col-name">VM Name</span>
+                            <span class="col-project">Project</span>
+                            <span class="col-uuid">UUID</span>
+                            <span class="col-size">OVA Size</span>
+                            <span class="col-file">File Status</span>
+                        </div>
+                        
+                        <div id="restore-point-vm-list" class="restore-point-vm-list">
+                            <div class="loading">
+                                <div class="spinner"></div>
+                                <span>Loading VMs...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="closeModal('restore-point-contents-modal')" class="btn-secondary">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
