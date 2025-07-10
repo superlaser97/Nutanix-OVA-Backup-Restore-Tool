@@ -194,3 +194,4 @@ Advanced script for individual VM restoration with comprehensive customization:
 
 ### Project Updates
 - There is no more legacy scripts, the "old" folder was removed
+- Project is focused on command-line bash scripts for VM backup and restore operations
