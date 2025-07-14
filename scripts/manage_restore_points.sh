@@ -21,12 +21,15 @@ set -eu
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESTORE_POINTS_DIR="$SCRIPT_DIR/restore-points"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+# Colors for output - improved for better readability
+RED='\033[0;31m'        # Red for errors
+GREEN='\033[0;32m'      # Green for success
+YELLOW='\033[1;33m'     # Bright yellow for warnings
+CYAN='\033[0;36m'       # Cyan for info (replaces dark blue)
+MAGENTA='\033[0;35m'    # Magenta for headers
+BOLD='\033[1m'          # Bold text
+DIM='\033[2m'           # Dim text for less important info
+NC='\033[0m'            # No Color
 
 # Check if restore-points directory exists
 if [[ ! -d "$RESTORE_POINTS_DIR" ]]; then
@@ -119,9 +122,9 @@ get_restore_point_details() {
 # Display main menu
 display_main_menu() {
     clear
-    echo -e "${BLUE}==========================================="
+    echo -e "${BOLD}${MAGENTA}═══════════════════════════════════════════${NC}"
     echo -e "        Restore Points Management"
-    echo -e "===========================================${NC}"
+    echo -e "${BOLD}${MAGENTA}═══════════════════════════════════════════${NC}"
     echo ""
     
     local restore_points
@@ -181,9 +184,9 @@ display_restore_point_details() {
     local index="$2"
     
     clear
-    echo -e "${BLUE}==========================================="
+    echo -e "${BOLD}${MAGENTA}═══════════════════════════════════════════${NC}"
     echo -e "        Restore Point Details"
-    echo -e "===========================================${NC}"
+    echo -e "${BOLD}${MAGENTA}═══════════════════════════════════════════${NC}"
     echo ""
     
     local details
@@ -278,18 +281,18 @@ delete_multiple_restore_points() {
     fi
     
     clear
-    echo -e "${BLUE}==========================================="
+    echo -e "${BOLD}${MAGENTA}═══════════════════════════════════════════${NC}"
     echo -e "        Delete Multiple Restore Points"
-    echo -e "===========================================${NC}"
+    echo -e "${BOLD}${MAGENTA}═══════════════════════════════════════════${NC}"
     echo ""
     
     declare -A selected=()
     
     while true; do
         clear
-        echo -e "${BLUE}==========================================="
+        echo -e "${BOLD}${MAGENTA}═══════════════════════════════════════════${NC}"
         echo -e "        Delete Multiple Restore Points"
-        echo -e "===========================================${NC}"
+        echo -e "${BOLD}${MAGENTA}═══════════════════════════════════════════${NC}"
         echo ""
         
         echo "Select restore points to delete:"
@@ -424,9 +427,9 @@ delete_multiple_restore_points() {
 # Show storage statistics
 show_storage_statistics() {
     clear
-    echo -e "${BLUE}==========================================="
+    echo -e "${BOLD}${MAGENTA}═══════════════════════════════════════════${NC}"
     echo -e "        Storage Statistics"
-    echo -e "===========================================${NC}"
+    echo -e "${BOLD}${MAGENTA}═══════════════════════════════════════════${NC}"
     echo ""
     
     local restore_points
