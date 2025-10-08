@@ -38,6 +38,7 @@ Management: View Restore Points → Delete/Statistics → Cleanup
 ## Quick Start
 
 ### Prerequisites
+- Unix-like operating system (Linux, macOS, or WSL on Windows)
 - `jq`, `curl`, `openssl`, and `base64` installed
 - Network access to Nutanix Prism Central
 - Valid Nutanix credentials
