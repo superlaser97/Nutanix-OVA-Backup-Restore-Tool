@@ -10,6 +10,9 @@
 
 set -eu
 
+# Source the UI library
+source "$(dirname "${BASH_SOURCE[0]}")/ui_lib.sh" || { echo "UI library not found or unreadable"; exit 1; }
+
 # Load credentials
 source .nutanix_creds || { echo "Credentials file not found or unreadable"; exit 1; }
 
@@ -24,7 +27,7 @@ POLL_INTERVAL=3
 # Fetch VMs from Prism Central
 echo "Fetching VMs from $PRISM..."
 vms_json=$(curl -s -k -u "$USER:$PASS" \
-  -X POST "https://$PRISM/api/nutanix/v3/vms/list" \
+  -X POST "https://$PRISM:9440/api/nutanix/v3/vms/list" \
   -H 'Content-Type: application/json' \
   -d '{"length":1000}')
 
@@ -32,7 +35,7 @@ vms_json=$(curl -s -k -u "$USER:$PASS" \
 declare -a vm_data=()
 while IFS= read -r line; do
   vm_data+=("$line")
-done < <(jq -r '.entities[] | select(.metadata.project_reference.name and .metadata.project_reference.name != "_internal") | "\(.metadata.project_reference.name)|\(.status.name)|\(.metadata.uuid)|\(.status.resources.power_state // "UNKNOWN")"' <<< "$vms_json" | sort)
+done < <(jq -r '.entities[] | select(.metadata.project_reference.name and .metadata.project_reference.name != "_internal") | "\(.metadata.project_reference.name)|\(.status.name)|\(.metadata.uuid)|\(.status.resources.power_state // "UNKNOWN")"' <<< "$vms_json" | sort -t'|' -k1,1 -k2,2)
 
 if [[ ${#vm_data[@]} -eq 0 ]]; then
   echo "No qualifying VMs found. Exiting."
@@ -314,7 +317,7 @@ delete_ovas_from_prism() {
       
       # Perform deletion
       resp=$(curl -s -k -u "$USER:$PASS" \
-        -X DELETE "https://$PRISM/api/nutanix/v3/ovas/$uuid" \
+        -X DELETE "https://$PRISM:9440/api/nutanix/v3/ovas/$uuid" \
         -H 'Content-Type: application/json')
       
       # Check if deletion was successful
@@ -445,10 +448,7 @@ for idx in "${selected_indices[@]}"; do
   
   echo -n "→ $name ($project)... "
   
-  resp=$(curl -s -k -u "$USER:$PASS" \
-    -X POST "https://$PRISM/api/nutanix/v3/vms/$uuid/export" \
-    -H 'Content-Type: application/json' \
-    -d '{"disk_file_format":"QCOW2","name":"'$uuid'"}')
+  resp=$(export_vm "$uuid" "$uuid")
   
   task_uuid=$(jq -r '.task_uuid // empty' <<< "$resp")
   
@@ -484,7 +484,7 @@ while true; do
   
   for vm_uuid in "${!task_map[@]}"; do
     task_json=$(curl -s -k -u "$USER:$PASS" \
-      -X GET "https://$PRISM/api/nutanix/v3/tasks/${task_map[$vm_uuid]}" \
+      -X GET "https://$PRISM:9440/api/nutanix/v3/tasks/${task_map[$vm_uuid]}" \
       -H 'Accept: application/json')
     
     status=$(jq -r '.status' <<< "$task_json")
@@ -531,7 +531,7 @@ if [[ "$download_choice" =~ ^[Yy] ]]; then
   # Fetch OVA list
   echo "Fetching OVA list..."
   ovas_json=$(curl -s -k -u "$USER:$PASS" \
-    -X POST "https://$PRISM/api/nutanix/v3/ovas/list" \
+    -X POST "https://$PRISM:9440/api/nutanix/v3/ovas/list" \
     -H 'Content-Type: application/json' \
     -d '{"kind":"ova","length":1000,"offset":0,"sort_attribute":"name","sort_order":"ASCENDING"}')
   
@@ -553,7 +553,7 @@ if [[ "$download_choice" =~ ^[Yy] ]]; then
       # Use curl with better error handling
       if curl -k -u "$USER:$PASS" -L \
         -H 'Accept: application/octet-stream' \
-        "https://$PRISM/api/nutanix/v3/ovas/$ova_uuid/file" \
+        "https://$PRISM:9440/api/nutanix/v3/ovas/$ova_uuid/file" \
         -o "$outfile" --fail --show-error; then
         
         if [[ -s "$outfile" ]]; then
@@ -595,10 +595,9 @@ else
     echo ""
     echo "Fetching OVA list from Prism Central..."
     ovas_json=$(curl -s -k -u "$USER:$PASS" \
-      -X POST "https://$PRISM/api/nutanix/v3/ovas/list" \
-      -H 'Content-Type: application/json' \
-      -d '{"kind":"ova","length":1000,"offset":0,"sort_attribute":"name","sort_order":"ASCENDING"}')
-    
+          -X POST "https://$PRISM:9440/api/nutanix/v3/ovas/list" \
+          -H 'Content-Type: application/json' \
+          -d '{"kind":"ova","length":1000,"offset":0,"sort_attribute":"name","sort_order":"ASCENDING"}')    
     delete_ovas_from_prism "$ovas_json"
   fi
 fi

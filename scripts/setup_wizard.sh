@@ -155,8 +155,8 @@ test_api_connection() {
     print_loading "Testing API connection to $prism..."
     
     # Test basic connectivity
-    if ! curl -s --connect-timeout 10 --max-time 30 -k "https://$prism" >/dev/null 2>&1; then
-        print_error "Cannot connect to https://$prism"
+    if ! curl -s --connect-timeout 10 --max-time 30 -k "https://$prism:9440" >/dev/null 2>&1; then
+        print_error "Cannot connect to https://$prism:9440"
         echo -e "  ${YELLOW}Common issues:${NC}"
         echo -e "  • Incorrect IP address or hostname"
         echo -e "  • Firewall blocking connection"
@@ -170,7 +170,7 @@ test_api_connection() {
     response=$(curl -s --connect-timeout 10 --max-time 30 -k \
         -u "$user:$pass" \
         -X POST \
-        "https://$prism/api/nutanix/v3/vms/list" \
+        "https://$prism:9440/api/nutanix/v3/vms/list" \
         -H 'Content-Type: application/json' \
         -d '{"length":1}' 2>&1)
     

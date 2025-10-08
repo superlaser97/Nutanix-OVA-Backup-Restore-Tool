@@ -304,9 +304,9 @@ test_api_connection() {
     fi
     
     # Test basic connectivity
-    if ! curl -s --connect-timeout 10 --max-time 30 -k "https://$prism" >/dev/null 2>&1; then
+    if ! curl -s --connect-timeout 10 --max-time 30 -k "https://$prism:9440" >/dev/null 2>&1; then
         if [[ "$silent" != "true" ]]; then
-            print_error "Cannot connect to https://$prism"
+            print_error "Cannot connect to https://$prism:9440"
         fi
         return 1
     fi
@@ -316,7 +316,7 @@ test_api_connection() {
     response=$(curl -s --connect-timeout 10 --max-time 30 -k \
         -u "$user:$pass" \
         -X POST \
-        "https://$prism/api/nutanix/v3/vms/list" \
+        "https://$prism:9440/api/nutanix/v3/vms/list" \
         -H 'Content-Type: application/json' \
         -d '{"length":1}' 2>&1)
     
@@ -347,7 +347,7 @@ api_call() {
     local curl_cmd=()
     curl_cmd+=("curl" "-s" "-k" "-u" "$USER:$PASS")
     curl_cmd+=("-X" "$method")
-    curl_cmd+=("https://$PRISM/api/nutanix/v3/$endpoint")
+    curl_cmd+=("https://$PRISM:9440/api/nutanix/v3/$endpoint")
     
     if [[ -n "$headers" ]]; then
         curl_cmd+=("-H" "$headers")

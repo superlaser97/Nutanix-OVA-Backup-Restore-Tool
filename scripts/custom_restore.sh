@@ -16,6 +16,9 @@
 
 set -eu
 
+# Source the UI library
+source "$(dirname "${BASH_SOURCE[0]}")/ui_lib.sh" || { echo "UI library not found or unreadable"; exit 1; }
+
 # Load credentials
 source .nutanix_creds || { echo "Credentials file not found or unreadable"; exit 1; }
 
@@ -346,7 +349,7 @@ build_resource_maps() {
     
     # Build subnets map using a safer parsing method
     local subnets_json=$(curl -s -k -u "$USER:$PASS" \
-        -X POST "https://$PRISM/api/nutanix/v3/subnets/list" \
+        -X POST "https://$PRISM:9440/api/nutanix/v3/subnets/list" \
         -H 'Content-Type: application/json' \
         -d '{"kind":"subnet","length":1000,"offset":0}')
     
@@ -366,7 +369,7 @@ build_resource_maps() {
     
     # Build projects map using the same safe parsing method
     local projects_json=$(curl -s -k -u "$USER:$PASS" \
-        -X POST "https://$PRISM/api/nutanix/v3/projects/list" \
+        -X POST "https://$PRISM:9440/api/nutanix/v3/projects/list" \
         -H 'Content-Type: application/json' \
         -d '{"kind":"project","length":100,"offset":0}')
     
@@ -748,7 +751,7 @@ upload_ova() {
     
     # Create OVA entity
     local create_resp=$(curl -s -k -u "$USER:$PASS" \
-        -X POST "https://$PRISM/api/nutanix/v3/ovas" \
+        -X POST "https://$PRISM:9440/api/nutanix/v3/ovas" \
         -H 'Content-Type: application/json' \
         -d '{"name":"'"$ova_name"'","upload_length":'"$filesize"',"checksum":{"checksum_algorithm":"SHA_1","checksum_value":"'"$full_cs"'"}}')
     
@@ -762,7 +765,7 @@ upload_ova() {
     local ova_uuid=""
     while [[ -z "$ova_uuid" ]]; do
         local task_json=$(curl -s -k -u "$USER:$PASS" \
-            -X GET "https://$PRISM/api/nutanix/v3/tasks/$task_uuid" \
+            -X GET "https://$PRISM:9440/api/nutanix/v3/tasks/$task_uuid" \
             -H 'Accept: application/json')
         ova_uuid=$(jq -r '.entity_reference_list[0].uuid // empty' <<< "$task_json")
         
@@ -785,7 +788,7 @@ upload_ova() {
         local cs=$(sha1sum "$tmpf" | cut -d' ' -f1)
         
         curl -s -k -u "$USER:$PASS" \
-            -X PUT "https://$PRISM/api/nutanix/v3/ovas/$ova_uuid/chunks" \
+            -X PUT "https://$PRISM:9440/api/nutanix/v3/ovas/$ova_uuid/chunks" \
             -H 'Content-Type: application/octet-stream' \
             -H "X-Nutanix-Checksum-Type:SHA_1" \
             -H "X-Nutanix-Checksum-Bytes:$cs" \
@@ -804,7 +807,7 @@ upload_ova() {
     
     # Concatenate chunks
     local concat_resp=$(curl -s -k -u "$USER:$PASS" \
-        -X POST "https://$PRISM/api/nutanix/v3/ovas/$ova_uuid/chunks/concatenate" \
+        -X POST "https://$PRISM:9440/api/nutanix/v3/ovas/$ova_uuid/chunks/concatenate" \
         -H 'Accept: application/json')
     
     local concat_task=$(jq -r '.task_uuid // empty' <<< "$concat_resp")
@@ -819,7 +822,7 @@ upload_ova() {
     
     while :; do
         local task_json=$(curl -s -k -u "$USER:$PASS" \
-            -X GET "https://$PRISM/api/nutanix/v3/tasks/$concat_task" \
+            -X GET "https://$PRISM:9440/api/nutanix/v3/tasks/$concat_task" \
             -H 'Accept: application/json')
         local status_now=$(jq -r '.status' <<< "$task_json")
         local pc=$(jq -r '.percentage_complete // 0' <<< "$task_json")
@@ -863,7 +866,7 @@ restore_vm() {
     
     # Fetch VM spec from OVA
     local vm_spec_json=$(curl -s -k -u "$USER:$PASS" \
-        -X GET "https://$PRISM/api/nutanix/v3/ovas/$ova_uuid/vm_spec" \
+        -X GET "https://$PRISM:9440/api/nutanix/v3/ovas/$ova_uuid/vm_spec" \
         -H 'Content-Type: application/json')
     
     if [[ -z "$vm_spec_json" ]] || ! jq -e '.vm_spec.spec' <<< "$vm_spec_json" >/dev/null 2>&1; then
@@ -937,7 +940,7 @@ restore_vm() {
     
     # Submit VM creation
     local create_resp=$(curl -s -k -u "$USER:$PASS" \
-        -X POST "https://$PRISM/api/nutanix/v3/vms" \
+        -X POST "https://$PRISM:9440/api/nutanix/v3/vms" \
         -H 'Content-Type: application/json' \
         -d "$payload")
     
@@ -957,7 +960,7 @@ restore_vm() {
     # Monitor restoration progress
     while true; do
         local task_json=$(curl -s -k -u "$USER:$PASS" \
-            -X GET "https://$PRISM/api/nutanix/v3/tasks/$task_id" \
+            -X GET "https://$PRISM:9440/api/nutanix/v3/tasks/$task_id" \
             -H 'Accept: application/json')
         local status_now=$(jq -r '.status' <<< "$task_json")
         local pc=$(jq -r '.percentage_complete // 0' <<< "$task_json")
@@ -1047,7 +1050,7 @@ perform_custom_restore() {
                 if [[ "$delete_choice" =~ ^[Yy] ]]; then
                     echo "→ Deleting uploaded OVA..."
                     curl -s -k -u "$USER:$PASS" \
-                        -X DELETE "https://$PRISM/api/nutanix/v3/ovas/$ova_uuid" \
+                        -X DELETE "https://$PRISM:9440/api/nutanix/v3/ovas/$ova_uuid" \
                         -H 'Content-Type: application/json' >/dev/null
                     echo "✅ OVA deleted from Prism Central"
                 fi
