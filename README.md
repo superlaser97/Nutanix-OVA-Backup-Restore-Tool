@@ -213,17 +213,3 @@ Uses Nutanix Prism Central v3 REST API:
 set -x  # Enable bash debug mode
 curl -v ...  # Verbose curl output
 ```
-
----
-
-**Version**: 2.4 | **Compatibility**: Nutanix Prism Central v3 API | **Requirements**: Bash 4.0+, jq, curl, openssl, base64
-
-## Recent Updates
-
-### ✨ **Version 2.4 Features**
-- 🛠️ **Setup Wizard**: Interactive configuration with credential validation and API testing
-- 📁 **Organized Structure**: All scripts moved to `scripts/` directory for better organization
-- 📚 **Shared UI Library**: Standardized functions in `ui_lib.sh` for consistent user experience
-- 🔒 **Enhanced Security**: Automatic credential file permissions and validation
-- 🎯 **Better Prerequisites**: Comprehensive dependency checking with installation guidance
-- 📋 **Improved Documentation**: Updated README and new CLAUDE.md for development guidance
